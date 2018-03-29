@@ -154,7 +154,7 @@ public class SudokuGUI extends javax.swing.JFrame {
         aboutMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(360, 465));
+        setPreferredSize(new java.awt.Dimension(380, 490));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         c00.setName("c00"); // NOI18N
@@ -1311,7 +1311,7 @@ public class SudokuGUI extends javax.swing.JFrame {
         }
         hintButton.setEnabled(false);
         jLabel1.setText("Try now. You will need to wait for the next hint.");
-        int delay = 28000;
+        int delay = 2000;
         Timer timer = new Timer(delay, new ActionListener() {
 
             @Override
@@ -1409,6 +1409,7 @@ public class SudokuGUI extends javax.swing.JFrame {
                 if(value!=null && grid.getCell(i, j).isInputValue()){
                     cell.setText(grid.getCell(i, j).getValue().toString());
                     cell.setBackground(Color.cyan);
+                    cell.setEditable(false);
                 }
                 jLabel1.setText("");
             }
@@ -1421,6 +1422,7 @@ public class SudokuGUI extends javax.swing.JFrame {
                 javax.swing.JTextField cell = (javax.swing.JTextField)getComponentByName("c"+i+""+j);
                 cell.setText("");
                 cell.setBackground(Color.white);
+                cell.setEditable(true);
             }
         }
     }

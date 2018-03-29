@@ -14,16 +14,16 @@
 	</developers>
 	<repositories>
 		<repository>
-			<id>unknown-jars-temp-repo</id>
-			<name>A temporary repository created by NetBeans for libraries and jars it could not identify. Please replace the dependencies in this repository with correct ones and delete this repository.</name>
-			<url>file:${project.basedir}/lib</url>
+			<id>netbeans</id>
+			<name>Netbeans rep</name>
+			<url>http://bits.netbeans.org/maven2/</url>
 		</repository>
 	</repositories>
 	<dependencies>
 		<dependency>
-			<groupId>unknown.binary</groupId>
-			<artifactId>AbsoluteLayout</artifactId>
-			<version>SNAPSHOT</version>
+		    <groupId>org.netbeans.external</groupId>
+		    <artifactId>AbsoluteLayout</artifactId>
+		    <version>RELEASE65</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

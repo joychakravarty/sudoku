@@ -20,7 +20,7 @@ public class Cell {
     private final Set<Integer> possibleValues = new TreeSet<>(allPossibleValues);
 
     private Integer value = null;
-    private boolean isInputValue = false;
+    private CellValueType valueType = null;
 
     public Cell(int x, int y) {
         this.x = x;
@@ -39,13 +39,10 @@ public class Cell {
         return possibleValues.remove(val);
     }
 
-    protected boolean setValue(int value, boolean isInput) {
-        if(isInput){
-            this.isInputValue = isInput;
-        }
+    protected boolean setValue(int value, CellValueType valueType) {
         if (this.value == null && this.possibleValues.contains(value)) {
             this.value = value;
-            this.isInputValue = isInput;
+            this.valueType = valueType;
             removeOtherPossibilities(value);
             return true;
         } else {
@@ -67,8 +64,12 @@ public class Cell {
         return this.value;
     }
 
-    public boolean isInputValue() {
-        return this.isInputValue;
+    public CellValueType getValueType() {
+        return this.valueType;
+    }
+    
+    public void setValueType(CellValueType valueType) {
+    		this.valueType = valueType;
     }
 
     public Set<Integer> getPossibleValues() {
@@ -78,7 +79,7 @@ public class Cell {
     public Cell cloneCell() {
         Cell cell = new Cell(x, y);
         cell.value = this.value;
-        cell.isInputValue = this.isInputValue;
+        cell.valueType = this.valueType;
         cell.possibleValues.removeAll(allPossibleValues);
         cell.possibleValues.addAll(this.possibleValues);
         return cell;

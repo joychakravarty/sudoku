@@ -3,15 +3,22 @@ package com.jc.sudoku;
 import java.util.Optional;
 
 import com.jc.sudoku.components.Cell;
+import com.jc.sudoku.components.CellValueType;
 import com.jc.sudoku.components.SudokuGrid;
 import com.jc.sudoku.exception.SudokuException;
 
 /**
  * 
+ * This class solves a SudokuGrid
  * @author d3m0n
  *
  */
 public class SudokuSolver {
+	
+	private final boolean withAssumption;
+	public SudokuSolver(boolean withAssumption) {
+		this.withAssumption = withAssumption;
+	}
 
     protected SudokuGrid preAssumptionSnapshotGrid;
 
@@ -23,7 +30,11 @@ public class SudokuSolver {
             throw new SudokuException("Could not solve - perhaps its a bad grid");
         }
         simpleSolve(grid);
-        //System.out.println(grid);
+        
+        if(!withAssumption && !grid.isSolved) {
+        		throw new SudokuException("Could not solve without making assumptions");
+        }
+        
         if (grid.isSolved) {
             System.out.println("Yay! Sudoku is solved!");
             return grid;
@@ -62,7 +73,7 @@ public class SudokuSolver {
                 }
             }
             if (possibilityCounter == 1) {
-                changesMade = grid.setValue(possibleXIndex, possibleYIndex, num, false);
+                changesMade = grid.setValue(possibleXIndex, possibleYIndex, num, CellValueType.SOLVED);
             }
         }
         return changesMade;
@@ -82,7 +93,7 @@ public class SudokuSolver {
                 }
             }
             if (possibilityCounter == 1) {
-                changesMade = grid.setValue(possibleXIndex, possibleYIndex, num, false);
+                changesMade = grid.setValue(possibleXIndex, possibleYIndex, num, CellValueType.SOLVED);
             }
         }
         return changesMade;
@@ -107,7 +118,7 @@ public class SudokuSolver {
                     }
                 }
                 if (possibilityCounter == 1) {
-                    changesMade = grid.setValue(possibleXIndex, possibleYIndex, num, false);
+                    changesMade = grid.setValue(possibleXIndex, possibleYIndex, num, CellValueType.SOLVED);
                 }
             }
         }
@@ -118,7 +129,7 @@ public class SudokuSolver {
         SudokuGrid assumptionGrid = new SudokuGrid(preAssumptionSnapshotGrid);
         Cell assumptionCell = getAssumptionCell(assumptionGrid);
         int assumptionValue = getAssumptionValue(assumptionCell);
-        assumptionGrid.setValue(assumptionCell.getX(), assumptionCell.getY(), assumptionValue, false);
+        assumptionGrid.setValue(assumptionCell.getX(), assumptionCell.getY(), assumptionValue, CellValueType.SOLVED);
         return assumptionGrid;
     }
 

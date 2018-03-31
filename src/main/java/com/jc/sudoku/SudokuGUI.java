@@ -16,9 +16,12 @@ import java.util.Random;
 
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.SudokuCellValueFilter;
 
 import com.jc.sudoku.components.Cell;
+import com.jc.sudoku.components.CellValueType;
 import com.jc.sudoku.components.SudokuGrid;
 import com.jc.sudoku.exception.SudokuException;
 
@@ -40,11 +43,16 @@ public class SudokuGUI extends javax.swing.JFrame {
         initComponents();
         createComponentMap();
         setLocationRelativeTo(null);
-        hintButton.setVisible(false);
-        
+        //hintButton.setVisible(false);
+        SudokuGrid solvedGrid = new SudokuCreator(SudokuCreator.EASY_LEVEL).createSudoku();
+        this.currentSolvedGame = solvedGrid;
+        populateInputFrame(solvedGrid);
+        hintButton.setVisible(true);
     }
     
     private Map<String, Component> componentMap;
+    
+    private SudokuGrid currentSolvedGame = null;
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -154,7 +162,8 @@ public class SudokuGUI extends javax.swing.JFrame {
         aboutMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(380, 490));
+        setTitle("Sudoku");
+        setPreferredSize(new java.awt.Dimension(360, 465));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         c00.setName("c00"); // NOI18N
@@ -859,7 +868,7 @@ public class SudokuGUI extends javax.swing.JFrame {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 360, 360, 30));
 
-        jMenu1.setText("Sudoku");
+        jMenu1.setText("Menu");
 
         newGameMenuItem.setText("New Game");
         newGameMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -1209,42 +1218,87 @@ public class SudokuGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_c78ActionPerformed
 
     private void solveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_solveButtonActionPerformed
-        SudokuGrid grid = new SudokuGrid();
-        int inputCellCount = 0;
-        for(int i=0; i<9; i++){
+    		hintButton.setVisible(false);
+    		if(this.currentSolvedGame!=null) {
+    			boolean isValid = validateUserInput();
+    			if(!isValid) {
+    				return;
+    			}
+    		}else {
+    			boolean isSuccessful = solveGridBasedOnUserInputs();
+    			if(!isSuccessful) {
+    				return;
+    			}
+    			
+    		}
+    		populateFrame(this.currentSolvedGame);
+    		jLabel1.setText("Solved!");
+    }//GEN-LAST:event_solveButtonActionPerformed
+
+	private boolean solveGridBasedOnUserInputs() {
+		SudokuGrid grid = new SudokuGrid();
+		int inputCellCount = 0;
+		for (int i = 0; i < 9; i++) {
+			for (int j = 0; j < 9; j++) {
+				javax.swing.JTextField cell = (javax.swing.JTextField) getComponentByName("c" + i + "" + j);
+				if (cell.getText() != null && !cell.getText().trim().equals("")) {
+					int value = Integer.valueOf(cell.getText());
+					try {
+						grid.setValue(i, j, value, CellValueType.USER);
+					} catch (SudokuException se) {
+						jLabel1.setText(se.getUserMsg());
+						((javax.swing.JTextField) getComponentByName("c" + se.getX() + "" + se.getY()))
+								.setBackground(Color.RED);
+					}
+					inputCellCount++;
+				}
+			}
+		}
+		if (inputCellCount < 17) {
+			jLabel1.setText("More values needed to solve this Sudoku!");
+			return false;
+		}
+		if (grid.isSolved) {
+			this.currentSolvedGame = grid;
+			return true;
+		}
+		SudokuSolver solver = new SudokuSolver(true);
+		try {
+			SudokuGrid solvedGrid = solver.solveSudoku(grid);
+			this.currentSolvedGame = solvedGrid;
+		} catch (SudokuException se) {
+			jLabel1.setText("Cannot solve. Insufficient or incorrect values entered!");
+			hintButton.setVisible(false);
+			return false;
+		}
+		return true;
+	}
+
+	private boolean validateUserInput() {
+    		boolean validationFlag = true;
+    		for(int i=0; i<9; i++){
             for (int j=0; j<9; j++){
                 javax.swing.JTextField cell = (javax.swing.JTextField)getComponentByName("c"+i+""+j);
-                if(cell.getText()!=null && !cell.getText().trim().equals("")){
+                if(cell.getText()!=null && !cell.getText().trim().equals("")){ //If we have value present in UI
+                		//And that value is a Solved value i.e. not GENERATED or HIT then mark it as USER input
+                		if(this.currentSolvedGame.getCell(i, j).getValueType()==CellValueType.SOLVED) {
+                			this.currentSolvedGame.getCell(i, j).setValueType(CellValueType.USER);
+                		}
+                		//Validation for incorrect value
                     int value = Integer.valueOf(cell.getText());
-                    try {
-                        grid.setValue(i, j, value, true);
-                    }catch(SudokuException se){
-                        jLabel1.setText(se.getUserMsg());
-                        ((javax.swing.JTextField)getComponentByName("c"+se.getX()+""+se.getY())).setBackground(Color.red);
+                    if(value != this.currentSolvedGame.getCell(i, j).getValue()) {
+                    		jLabel1.setText("Incorrect value, should be "+this.currentSolvedGame.getCell(i, j).getValue());
+                    		validationFlag = false;
+                    		cell.setBackground(Color.RED);
+                    		break;
                     }
-                    inputCellCount++;
                 }
             }
         }
-        if(inputCellCount < 17){
-            jLabel1.setText("More values needed to solve this Sudoku!");
-            return;
-        }
-        if(grid.isSolved){
-            populateFrame(grid);
-            return;
-        }
-        SudokuSolver solver = new SudokuSolver();
-        try {
-            SudokuGrid solvedGrid = solver.solveSudoku(grid);
-            populateFrame(solvedGrid);
-        } catch(SudokuException se){
-            jLabel1.setText("Cannot solve. Insufficient or incorrect values entered!");
-        }
-        hintButton.setVisible(false);
-    }//GEN-LAST:event_solveButtonActionPerformed
+		return validationFlag;
+	}
 
-    private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
+	private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
         int option = JOptionPane.showConfirmDialog(this, "This will clear values from all cells. Are you sure?", 
                 "Clear confirmation",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if(option == JOptionPane.YES_OPTION){
@@ -1256,8 +1310,9 @@ public class SudokuGUI extends javax.swing.JFrame {
 
     private void newGameMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newGameMenuItemActionPerformed
         clearAll();
-        SudokuGrid grid = new SudokuCreator().createSudoku();
-        populateInputFrame(grid);
+        SudokuGrid solvedGrid = new SudokuCreator(SudokuCreator.HARD_LEVEL).createSudoku();
+        this.currentSolvedGame = solvedGrid;
+        populateInputFrame(solvedGrid);
         hintButton.setVisible(true);
     }//GEN-LAST:event_newGameMenuItemActionPerformed
 
@@ -1266,49 +1321,37 @@ public class SudokuGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_aboutMenuItemActionPerformed
 
     private void hintButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hintButtonActionPerformed
+    		if(this.currentSolvedGame!=null) {
+    			boolean isValid = validateUserInput();
+    			if(!isValid) {
+    				return;
+    			}
+		}else {
+			boolean isSuccessful = solveGridBasedOnUserInputs();
+			if(!isSuccessful) {
+				return;
+			}
+        }
+	        
+        Cell cell = null;
+        while(cell == null){
+            final int x = new Random().nextInt(9);
+            final int y = new Random().nextInt(9);
+            
+            javax.swing.JTextField uiCell = (javax.swing.JTextField)getComponentByName("c"+x+""+y);
+            //We cannot provide hint for a cell with value
+            if(uiCell.getText()==null || uiCell.getText().trim().equals("")){
+            //We cannot provide hint for a cell which was GENERATED or USER (taken care in validation) or HINT 
+	            if(this.currentSolvedGame.getCell(x, y).getValueType()==CellValueType.SOLVED){
+	            		cell = this.currentSolvedGame.getCell(x, y);
+	            		cell.setValueType(CellValueType.HINT);
+	            }
+            }
+        }
+        javax.swing.JTextField hintCell = (javax.swing.JTextField)getComponentByName("c"+cell.getX()+""+cell.getY());
+        hintCell.setText(cell.getValue().toString());
+        hintCell.setBackground(Color.ORANGE);
         
-        SudokuGrid grid = new SudokuGrid();
-        int inputCellCount = 0;
-        for(int i=0; i<9; i++){
-            for (int j=0; j<9; j++){
-                javax.swing.JTextField cell = (javax.swing.JTextField)getComponentByName("c"+i+""+j);
-                if(cell.getText()!=null && !cell.getText().trim().equals("")){
-                    int value = Integer.valueOf(cell.getText());
-                    try {
-                        grid.setValue(i, j, value, true);
-                    }catch(SudokuException se){
-                        jLabel1.setText(se.getUserMsg());
-                        ((javax.swing.JTextField)getComponentByName("c"+se.getX()+""+se.getY())).setBackground(Color.red);
-                    }
-                    inputCellCount++;
-                }
-            }
-        }
-        if(inputCellCount < 17){
-            jLabel1.setText("More values needed to provide hint!");
-            return;
-        }
-        if(grid.isSolved){
-            return;
-        }
-        SudokuSolver solver = new SudokuSolver();
-        try {
-            SudokuGrid solvedGrid = solver.solveSudoku(grid);
-            Cell cell = null;
-            while(cell == null){
-                int x = new Random().nextInt(9);
-                int y = new Random().nextInt(9);
-                if(!grid.getCell(x, y).isInputValue() && grid.getCell(x, y).getValue()==null){
-                    cell = grid.getCell(x, y);
-                }
-            }
-            javax.swing.JTextField hintCell = (javax.swing.JTextField)getComponentByName("c"+cell.getX()+""+cell.getY());
-            hintCell.setText(solvedGrid.getCell(cell.getX(), cell.getY()).getValue().toString());
-            hintCell.setBackground(Color.ORANGE);
-        } catch(SudokuException se){
-            jLabel1.setText("Cannot provide hint. Insufficient or incorrect values entered!");
-            return;
-        }
         hintButton.setEnabled(false);
         jLabel1.setText("Try now. You will need to wait for the next hint.");
         int delay = 2000;
@@ -1370,6 +1413,42 @@ public class SudokuGUI extends javax.swing.JFrame {
                     javax.swing.JTextField cell = (javax.swing.JTextField) component;
                     javax.swing.text.PlainDocument doc = (javax.swing.text.PlainDocument)cell.getDocument();
                     doc.setDocumentFilter(new SudokuCellValueFilter());
+                    doc.addDocumentListener(new DocumentListener() {
+						
+						@Override
+						public void removeUpdate(DocumentEvent e) {
+							jLabel1.setText("");
+						}
+						
+						@Override
+						public void insertUpdate(DocumentEvent e) {
+							if(currentSolvedGame!=null) {
+								boolean incorrectValueFound = false;
+								for(int i=0; i<9; i++){
+						            for (int j=0; j<9; j++){
+						                javax.swing.JTextField cell = (javax.swing.JTextField)getComponentByName("c"+i+""+j);
+						                if (cell.getText() == null || cell.getText().trim().equals("")) {
+						                		jLabel1.setText("");
+						                		return;
+						                }else if(!cell.getText().equals(String.valueOf(currentSolvedGame.getCell(i, j).getValue()))) {
+						                		incorrectValueFound = true;
+						                }
+						            }
+								}
+								if(incorrectValueFound) {
+									jLabel1.setText("Incorrect Value found!");
+								}else {
+									jLabel1.setText("Nice work! You have solved the Sudoku");
+								}
+							}
+						}
+						
+						@Override
+						public void changedUpdate(DocumentEvent e) {
+							// TODO Auto-generated method stub
+							
+						}
+					});
                     
                     cell.setHorizontalAlignment(javax.swing.JTextField.CENTER);
                     cell.setFont(font1);
@@ -1394,8 +1473,12 @@ public class SudokuGUI extends javax.swing.JFrame {
                 if(value!=null){
                     cell.setText(grid.getCell(i, j).getValue().toString());
                 }
-                if(grid.getCell(i, j).isInputValue()){
-                    cell.setBackground(Color.yellow);
+                if(grid.getCell(i, j).getValueType()==CellValueType.GENERATED){
+                    cell.setBackground(Color.cyan);
+                }else if(grid.getCell(i, j).getValueType()==CellValueType.HINT) {
+                		cell.setBackground(Color.ORANGE);
+                }else if(grid.getCell(i, j).getValueType()==CellValueType.USER) {
+                		cell.setBackground(Color.YELLOW);
                 }
             }
         }
@@ -1406,17 +1489,20 @@ public class SudokuGUI extends javax.swing.JFrame {
             for (int j=0; j<9; j++){
                 javax.swing.JTextField cell = (javax.swing.JTextField)getComponentByName("c"+i+""+j);
                 Integer value = grid.getCell(i, j).getValue();
-                if(value!=null && grid.getCell(i, j).isInputValue()){
-                    cell.setText(grid.getCell(i, j).getValue().toString());
+                if(grid.getCell(i, j).getValueType()==CellValueType.GENERATED && value!=null) {
+                		cell.setText(grid.getCell(i, j).getValue().toString());
+                }
+                if(CellValueType.GENERATED==grid.getCell(i, j).getValueType()){ 
                     cell.setBackground(Color.cyan);
                     cell.setEditable(false);
-                }
+                } 
                 jLabel1.setText("");
             }
         }
     }
     
     private void clearAll(){
+    		this.currentSolvedGame = null;
         for(int i=0; i<9; i++){
             for (int j=0; j<9; j++){
                 javax.swing.JTextField cell = (javax.swing.JTextField)getComponentByName("c"+i+""+j);

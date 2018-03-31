@@ -37,9 +37,9 @@ public class SudokuGrid {
         }
     }
 
-    public boolean setValue(int x, int y, int value, boolean isInput) {
+    public boolean setValue(int x, int y, int value, CellValueType valueType) {
         
-        boolean success = grid[x][y].setValue(value, isInput);
+        boolean success = grid[x][y].setValue(value, valueType);
         if (success) {
             removePossibilityFromRowCells(x, y, value);
             removePossibilityFromColumnCells(x, y, value);
@@ -51,12 +51,12 @@ public class SudokuGrid {
             Cell singlePossibilityCell = findSinglePossibilityCell();
             if (singlePossibilityCell != null) {
                 return this.setValue(singlePossibilityCell.getX(), singlePossibilityCell.getY(),
-                        singlePossibilityCell.getPossibleValues().iterator().next(), false);
+                        singlePossibilityCell.getPossibleValues().iterator().next(), CellValueType.SOLVED);
             }
             return true;
         } else {
             if(grid[x][y].getValue()==null || grid[x][y].getValue()!=value){
-                if(isInput){
+                if(valueType == CellValueType.GENERATED){
                     throw new SudokuException(x, y, "Not a valid value " + value + " for [" + x + "][" + y + "].. existing value + "+grid[x][y].getValue(), SudokuException.INVALID_VALUE);
                 }else{
                     throw new SudokuException(x, y, "Might be a Bad Grid. Contradiction encountered while trying to set value: " + value + " for [" + x + "][" + y + "]. Existing value + "+grid[x][y].getValue() +" Possibilities : "+grid[x][y].getPossibleValues(), SudokuException.CONTRADICTION);

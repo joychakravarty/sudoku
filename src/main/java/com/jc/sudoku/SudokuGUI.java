@@ -1354,7 +1354,7 @@ public class SudokuGUI extends javax.swing.JFrame {
         
         hintButton.setEnabled(false);
         jLabel1.setText("Try now. You will need to wait for the next hint.");
-        int delay = 2000;
+        int delay = 28000;
         Timer timer = new Timer(delay, new ActionListener() {
 
             @Override
@@ -1436,7 +1436,7 @@ public class SudokuGUI extends javax.swing.JFrame {
 						            }
 								}
 								if(incorrectValueFound) {
-									jLabel1.setText("Incorrect Value found!");
+									jLabel1.setText("Incorrect value found!");
 								}else {
 									jLabel1.setText("Nice work! You have solved the Sudoku");
 								}
@@ -1455,7 +1455,6 @@ public class SudokuGUI extends javax.swing.JFrame {
                 }
             }
         }
-        //componentMap.forEach((k,v)->System.out.println(k));
     }
 
     public Component getComponentByName(String name) {

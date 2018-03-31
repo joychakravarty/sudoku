@@ -69,7 +69,8 @@ public class SudokuCreator {
                     continue;
                 }
                 if (solvedGrid != null) {
-                    System.out.println(solvedGrid);
+                		System.out.println("Created a solvable grid!");
+                    //System.out.println(solvedGrid);
                     break;
                 }
             }
